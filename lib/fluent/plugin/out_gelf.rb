@@ -65,17 +65,20 @@ class GELFOutput < BufferedOutput
       when 'level' then
         case "#{v}".downcase
         # emergency and alert aren't supported by gelf-rb
-        when '0', 'emergency' then gelfentry[:level] = GELF::UNKNOWN
-        when '1', 'alert' then gelfentry[:level] = GELF::UNKNOWN
-        when '2', 'critical', 'crit' then gelfentry[:level] = GELF::FATAL
-        when '3', 'error', 'err' then gelfentry[:level] = GELF::ERROR
-        when '4', 'warning', 'warn' then gelfentry[:level] = GELF::WARN
+        when '0', 'emergency' then gelfentry[:level] = GELF::UNKNOWN; gelfentry[:level_code] = 'EMERGENCY';
+        when '1', 'alert' then gelfentry[:level] = GELF::UNKNOWN; gelfentry[:level_code] = 'ALERT';
+        when '2', '60', 'critical', 'crit' then gelfentry[:level] = GELF::FATAL; gelfentry[:level_code] = 'FATAL';
+        when '3', '50', 'error', 'err' then gelfentry[:level] = GELF::ERROR; gelfentry[:level_code] = 'ERROR';
+        when '4', '40', 'warning', 'warn' then gelfentry[:level] = GELF::WARN; gelfentry[:level_code] = 'WARN';
         # gelf-rb also skips notice
-        when '5', 'notice' then gelfentry[:level] = GELF::INFO
-        when '6', 'informational', 'info' then gelfentry[:level] = GELF::INFO
-        when '7', 'debug' then gelfentry[:level] = GELF::DEBUG
-        else gelfentry[:_level] = v
+        when '5', 'notice' then gelfentry[:level] = GELF::INFO; gelfentry[:level_code] = 'NOTICE';
+        when '6', '30', 'informational', 'info' then gelfentry[:level] = GELF::INFO; gelfentry[:level_code] = 'INFO';
+        when '7', '20', 'debug' then gelfentry[:level] = GELF::DEBUG; gelfentry[:level_code] = 'DEBUG';
+        when '10', 'trace' then gelfentry[:level] = GELF::UNKNOWN; gelfentry[:level_code] = 'TRACE';
+        else gelfentry[:_level] = v; 
         end
+        # store raw log level
+        gelfentry[:raw_level] = v;
       when 'msec' then
         # msec must be three digits (leading/trailing zeroes)
         if @add_msec_time then 
